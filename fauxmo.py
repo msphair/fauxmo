@@ -365,12 +365,20 @@ class rest_api_handler(object):
         self.off_cmd = off_cmd
 
     def on(self):
-        r = requests.get(self.on_cmd)
-        return r.status_code == 200
+        try:
+            r = requests.get(self.on_cmd, timeout = 3)
+            return r.status_code == 200
+        except requests.Timeout:
+            dbg("On request timed out.")
+            return False
 
     def off(self):
-        r = requests.get(self.off_cmd)
-        return r.status_code == 200
+        try:
+            r = requests.get(self.off_cmd, timeout = 3)
+            return r.status_code == 200
+        except requests.Timeout:
+            dbg("Off request timed out.")
+            return False
 
 
 # Each entry is a list with the following elements:
