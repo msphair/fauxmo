@@ -308,11 +308,11 @@ class upnp_broadcast_responder(object):
             try:
                 self.ssock.setsockopt(socket.IPPROTO_IP,socket.IP_ADD_MEMBERSHIP,self.mreq)
             except Exception, e:
-                dbg('WARNING: Failed to join multicast group:%s' % e)
+                dbg('WARNING: Failed to join multicast group: %s' % e)
                 ok = False
 
         except Exception, e:
-            dbg("Failed to initialize UPnP sockets:%s" % e)
+            dbg("Failed to initialize UPnP sockets: %s" % e)
             return False
         if ok:
             dbg("Listening for UPnP broadcasts")
@@ -366,12 +366,20 @@ class rest_api_handler(object):
         self.off_cmd = off_cmd
 
     def on(self):
-        r = requests.get(self.on_cmd)
-        return r.status_code == 200
+        try:
+            r = requests.get(self.on_cmd, timeout = 3)
+            return r.status_code == 200
+        except requests.Timeout:
+            dbg("On request timed out.")
+            return False
 
     def off(self):
-        r = requests.get(self.off_cmd)
-        return r.status_code == 200
+        try:
+            r = requests.get(self.off_cmd, timeout = 3)
+            return r.status_code == 200
+        except requests.Timeout:
+            dbg("Off request timed out.")
+            return False
 
 
 # Each entry is a list with the following elements:
@@ -385,11 +393,9 @@ class rest_api_handler(object):
 # list will be used.
 
 FAUXMOS = [
-    #['office lights', rest_api_handler('http://192.168.5.4/ha-api?cmd=on&a=office', 'http://192.168.5.4/ha-api?cmd=off&a=office')],
-    #['kitchen lights', rest_api_handler('http://192.168.5.4/ha-api?cmd=on&a=kitchen', 'http://192.168.5.4/ha-api?cmd=off&a=kitchen')],
-    ['loft light', rest_api_handler('http://house/light/1', 'http://house/light/0')],
-    ['loft fan', rest_api_handler('http://house/fan/loft/1', 'http://house/fan/loft/0')],
     ['house fan', rest_api_handler('http://house/fan/house/1', 'http://house/fan/house/0')],
+    ['loft fan', rest_api_handler('http://house/fan/loft/1', 'http://house/fan/loft/0')],
+    ['loft light', rest_api_handler('http://house/light/1', 'http://house/light/0')],
 ]
 
 
